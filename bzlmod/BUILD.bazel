@@ -1,0 +1,47 @@
+load("@rules_go//go:def.bzl", "go_binary", "go_library")
+load("@rules_pkg//:pkg.bzl", "pkg_deb", "pkg_tar")
+
+go_library(
+    name = "go_default_library",
+    srcs = [
+        "main.go",
+        "opa.go",
+    ],
+    importpath = "bzlmod-test/bzlmod",
+    visibility = ["//visibility:private"],
+    deps = [
+        "@com_github_open_policy_agent_opa//v1/rego:go_default_library",
+    ],
+)
+
+go_binary(
+    name = "bzlmod",
+    embed = [":go_default_library"],
+    pure = "on",
+    visibility = ["//visibility:public"],
+)
+
+pkg_tar(
+    name = "debian-data",
+    extension = "tar.gz",
+    files = {
+        ":bzlmod": "/usr/bin/bzlmod",
+    },
+    modes = {
+        "/usr/bin/extauth": "0755",
+    },
+)
+
+version = "1.0.0"
+
+pkg_deb(
+    name = "debian",
+    architecture = "amd64",
+    data = ":debian-data",
+    depends = [],
+    description = "poc bazel failing",
+    maintainer = "John Doe",
+    package = "bzlmod",
+    version = version,
+    visibility = ["//visibility:public"],
+)
